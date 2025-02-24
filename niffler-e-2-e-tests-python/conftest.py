@@ -1,4 +1,5 @@
 import os
+from time import sleep
 
 import allure
 import pytest
@@ -55,6 +56,7 @@ def auth(envs):
     browser.element('input[name=password]').set_value(envs.test_password)
     browser.element('button[type=submit]').click()
 
+    sleep(1)
     token = browser.driver.execute_script('return window.sessionStorage.getItem("id_token")')
     allure.attach(token, name="token.txt", attachment_type=AttachmentType.TEXT)
     return token
