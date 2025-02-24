@@ -6,7 +6,7 @@ from allure_commons.types import AttachmentType
 from requests import Response
 from requests_toolbelt.utils.dump import dump_response
 
-from models.spend import Category, Spend, SpendAdd
+from models.spend import Category, Spend, SpendAdd, CategoryAdd
 
 
 class SpendsHttpClient:
@@ -33,10 +33,8 @@ class SpendsHttpClient:
         self.raise_for_status(response)
         return [Category.model_validate(item) for item in response.json()]
 
-    def add_category(self, name: str) -> Category:
-        response = self.session.post(urljoin(self.base_url, "/api/categories/add"), json={
-            "category": name
-        })
+    def add_category(self, category: CategoryAdd) -> Category:
+        response = self.session.post(urljoin(self.base_url, "/api/categories/add"), json=category.model_dump())
         self.raise_for_status(response)
         return Category.model_validate(response.json())
 

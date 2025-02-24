@@ -12,6 +12,7 @@ from selene import browser
 from clients.spends_client import SpendsHttpClient
 from databases.spend_db import SpendDb
 from models.config import Envs
+from models.spend import CategoryAdd
 
 
 def allure_logger(config) -> AllureReporter:
@@ -28,10 +29,10 @@ def pytest_runtest_call(item: Item):
 @pytest.hookimpl(hookwrapper=True, trylast=True)
 def pytest_fixture_setup(fixturedef: FixtureDef, request: FixtureRequest):
     yield
-    logger = allure_logger(request.config)
-    item = logger.get_last_item()
-    scope_letter = fixturedef.scope[0].upper()
-    item.name = f"[{scope_letter}] " + " ".join(fixturedef.argname.split("_")).title()
+    # logger = allure_logger(request.config)
+    # item = logger.get_last_item()
+    # scope_letter = fixturedef.scope[0].upper()
+    # item.name = f"[{scope_letter}] " + " ".join(fixturedef.argname.split("_")).title()
 
 
 @pytest.fixture(scope="session")
@@ -51,13 +52,11 @@ def envs() -> Envs:
 @pytest.fixture(scope="session")
 def auth(envs):
     browser.open(envs.frontend_url)
-    browser.element('a[href*=redirect]').click()
     browser.element('input[name=username]').set_value(envs.test_username)
     browser.element('input[name=password]').set_value(envs.test_password)
     browser.element('button[type=submit]').click()
 
-    sleep(1)
-    token = browser.driver.execute_script('return window.sessionStorage.getItem("id_token")')
+    token = browser.driver.execute_script('return window.localStorage.getItem("id_token")')
     allure.attach(token, name="token.txt", attachment_type=AttachmentType.TEXT)
     return token
 
@@ -75,8 +74,8 @@ def spend_db(envs) -> SpendDb:
 @pytest.fixture(params=[])
 def category(request: FixtureRequest, spends_client, spend_db):
     category_name = request.param
-    category = spends_client.add_category(category_name)
-    yield category.category
+    category = spends_client.add_category(CategoryAdd(name=category_name))
+    yield category.name
     spend_db.delete_category(category.id)
 
 
