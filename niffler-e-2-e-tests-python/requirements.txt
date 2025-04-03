@@ -4,6 +4,8 @@ requests
 python-dotenv
 allure-pytest
 requests-toolbelt
+pytest-cov
+hypothesis
 
 psycopg2-binary
 sqlalchemy

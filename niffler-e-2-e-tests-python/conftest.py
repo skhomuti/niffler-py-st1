@@ -11,6 +11,7 @@ from selene import browser
 from clients.spends_client import SpendsHttpClient
 from databases.spend_db import SpendDb
 from models.config import Envs
+from models.spend import SpendAdd
 
 
 def allure_logger(config) -> AllureReporter:
@@ -27,10 +28,10 @@ def pytest_runtest_call(item: Item):
 @pytest.hookimpl(hookwrapper=True, trylast=True)
 def pytest_fixture_setup(fixturedef: FixtureDef, request: FixtureRequest):
     yield
-    logger = allure_logger(request.config)
-    item = logger.get_last_item()
-    scope_letter = fixturedef.scope[0].upper()
-    item.name = f"[{scope_letter}] " + " ".join(fixturedef.argname.split("_")).title()
+    # logger = allure_logger(request.config)
+    # item = logger.get_last_item()
+    # scope_letter = fixturedef.scope[0].upper()
+    # item.name = f"[{scope_letter}] " + " ".join(fixturedef.argname.split("_")).title()
 
 
 @pytest.fixture(scope="session")
@@ -80,11 +81,16 @@ def category(request: FixtureRequest, spends_client, spend_db):
 
 @pytest.fixture(params=[])
 def spends(request: FixtureRequest, spends_client):
-    test_spend = spends_client.add_spends(request.param)
+    yield from spends_generator(spends_client, request.param)
+
+
+def spends_generator(spends_client, spend: SpendAdd):
+    test_spend = spends_client.add_spends(spend)
     yield test_spend
     all_spends = spends_client.get_spends()
     if test_spend.id in [spend.id for spend in all_spends]:
         spends_client.remove_spends([test_spend.id])
+    return
 
 
 @pytest.fixture()
